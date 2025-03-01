@@ -21,12 +21,12 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
     public void add(FakeEntity entity){
         entities.put(entity.getEntityId(), entity);
 
-        Bukkit.getOnlinePlayers().forEach(entity::spawn);
+        entity.spawnAll();
     }
 
     @Override
     public void dispose() {
-        entities.values().forEach((entity) -> Bukkit.getOnlinePlayers().forEach(entity::remove));
+        entities.values().forEach(FakeEntity::removeAll);
         entities.clear();
     }
 }
