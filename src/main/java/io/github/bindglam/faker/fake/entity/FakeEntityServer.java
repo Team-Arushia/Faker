@@ -25,6 +25,13 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
     }
 
     @Override
+    public void remove(FakeEntity entity) {
+        entity.removeAll();
+
+        entities.remove(entity.entityId);
+    }
+
+    @Override
     public void dispose() {
         entities.values().forEach(FakeEntity::removeAll);
         entities.clear();

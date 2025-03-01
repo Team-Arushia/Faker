@@ -7,5 +7,7 @@ public interface FakeServer<T> {
 
     void add(T var01);
 
+    void remove(T var01);
+
     void dispose();
 }
