@@ -13,6 +13,7 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSp
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 public abstract class FakeEntity {
     protected Location location;
+    protected World world;
     protected final EntityType type;
     protected final List<EntityData> metadata = new ArrayList<>();
     protected final int entityId = SpigotReflectionUtil.generateEntityId();
@@ -29,9 +31,11 @@ public abstract class FakeEntity {
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
         this.location = SpigotConversionUtil.fromBukkitLocation(bukkitLoc);
+        this.world = bukkitLoc.getWorld();
     }
 
     public void spawn(Player player){
+        if(!player.getWorld().getName().equals(world.getName())) return;
         if(blacklist.stream().map(UUID::toString).toString().contains(player.getUniqueId().toString()))
             return;
 
@@ -47,6 +51,7 @@ public abstract class FakeEntity {
     }
 
     public void update(Player player){
+        if(!player.getWorld().getName().equals(world.getName())) return;
         if(blacklist.stream().map(UUID::toString).toString().contains(player.getUniqueId().toString()))
             return;
 
@@ -62,6 +67,7 @@ public abstract class FakeEntity {
     }
 
     public void remove(Player player){
+        if(!player.getWorld().getName().equals(world.getName())) return;
         if(blacklist.stream().map(UUID::toString).toString().contains(player.getUniqueId().toString()))
             return;
 
@@ -74,12 +80,13 @@ public abstract class FakeEntity {
         Bukkit.getOnlinePlayers().forEach(this::remove);
     }
 
-    public Location getLocation() {
-        return location;
+    public org.bukkit.Location getLocation() {
+        return SpigotConversionUtil.toBukkitLocation(world, location);
     }
 
-    public void setLocation(Location location) {
-        this.location = location;
+    public void setLocation(org.bukkit.Location location) {
+        this.location = SpigotConversionUtil.fromBukkitLocation(location);
+        this.world = location.getWorld();
 
         updateAll();
     }
