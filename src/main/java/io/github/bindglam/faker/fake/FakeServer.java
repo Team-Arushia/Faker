@@ -8,10 +8,4 @@ public interface FakeServer<T> {
     void add(T var01);
 
     void dispose();
-
-    Type getType();
-
-    enum Type {
-        ENTITY
-    }
 }

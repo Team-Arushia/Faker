@@ -6,13 +6,14 @@ import com.github.retrooper.packetevents.util.Quaternion4f;
 import com.github.retrooper.packetevents.util.Vector3f;
 import io.github.bindglam.faker.fake.entity.FakeEntity;
 import io.github.bindglam.faker.fake.entity.FakeEntityServer;
+import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.EntityType;
 import org.bukkit.util.Transformation;
 
 public abstract class FakeDisplayEntity extends FakeEntity {
-    public FakeDisplayEntity(EntityType bukkitType, FakeEntityServer server) {
-        super(bukkitType, server);
+    public FakeDisplayEntity(EntityType bukkitType, Location location) {
+        super(bukkitType, location);
     }
 
     public void setTransformation(Transformation transformation){

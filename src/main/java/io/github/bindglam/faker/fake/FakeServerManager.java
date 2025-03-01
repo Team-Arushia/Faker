@@ -1,27 +1,31 @@
 package io.github.bindglam.faker.fake;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class FakeServerManager {
-    private final Map<String, Map<FakeServer.Type, FakeServer<?>>> servers = new HashMap<>(); // key는 plugin name
+    private final Map<String, Map<String, FakeServer<?>>> servers = new HashMap<>(); // key는 plugin name
 
-    public void register(JavaPlugin plugin, FakeServer<?> server) {
+    public void register(JavaPlugin plugin, String id, FakeServer<?> server) {
         if(!servers.containsKey(plugin.getName()))
-            servers.put(plugin.getName(), new EnumMap<>(FakeServer.Type.class));
-        servers.get(plugin.getName()).put(server.getType(), server);
+            servers.put(plugin.getName(), new HashMap<>());
+        servers.get(plugin.getName()).put(id, server);
     }
 
     public void unregisterAll(JavaPlugin plugin){
         if(!servers.containsKey(plugin.getName()))
             return;
-        for(FakeServer<?> server : servers.get(plugin.getName()).values())
-            server.dispose();
+        servers.get(plugin.getName()).values().forEach(FakeServer::dispose);
         servers.remove(plugin.getName());
     }
 
-    public void get(JavaPlugin plugin, FakeServer.Type type) {
-        servers.get(plugin.getName()).put(server.getType(), server);
+    public <T extends FakeServer<?>> @Nullable T get(JavaPlugin plugin, String id) {
+        return (T) servers.get(plugin.getName()).get(id);
+    }
+
+    public Map<String, Map<String, FakeServer<?>>> getServers() {
+        return new HashMap<>(servers);
     }
 }

@@ -6,11 +6,12 @@ import io.github.bindglam.faker.fake.entity.FakeEntityServer;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.NotImplementedException;
 import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 
 public class FakeTextDisplayEntity extends FakeDisplayEntity {
-    public FakeTextDisplayEntity(FakeEntityServer server) {
-        super(EntityType.TEXT_DISPLAY, server);
+    public FakeTextDisplayEntity(Location location) {
+        super(EntityType.TEXT_DISPLAY, location);
     }
 
     public void setText(Component component){
@@ -22,7 +23,7 @@ public class FakeTextDisplayEntity extends FakeDisplayEntity {
     }
 
     public void setBackgroundColor(Color color){
-        throw new NotImplementedException();
+        metadata.add(new EntityData(25, EntityDataTypes.INT, color.asARGB()));
     }
 
     public void setOpacity(byte value){

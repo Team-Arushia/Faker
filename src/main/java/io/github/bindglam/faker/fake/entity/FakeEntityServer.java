@@ -1,13 +1,13 @@
 package io.github.bindglam.faker.fake.entity;
 
 import io.github.bindglam.faker.fake.FakeServer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
 public final class FakeEntityServer implements FakeServer<FakeEntity> {
     private final Map<Integer, FakeEntity> entities = new HashMap<>();
-    private final List<UUID> viewers = new ArrayList<>();
 
     public FakeEntityServer(){
     }
@@ -20,30 +20,13 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
     @Override
     public void add(FakeEntity entity){
         entities.put(entity.getEntityId(), entity);
+
+        Bukkit.getOnlinePlayers().forEach(entity::spawn);
     }
 
     @Override
     public void dispose() {
-    }
-
-    @Override
-    public Type getType() {
-        return Type.ENTITY;
-    }
-
-    public void addViewer(Player player){
-        viewers.add(player.getUniqueId());
-    }
-
-    public void removeViewer(Player player){
-        viewers.remove(player.getUniqueId());
-    }
-
-    public void removeViewer(UUID uuid){
-        viewers.remove(uuid);
-    }
-
-    public List<UUID> getViewers() {
-        return new ArrayList<>(viewers);
+        entities.values().forEach((entity) -> Bukkit.getOnlinePlayers().forEach(entity::remove));
+        entities.clear();
     }
 }
