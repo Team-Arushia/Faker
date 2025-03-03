@@ -15,18 +15,18 @@ public class FakeTextDisplayEntity extends FakeDisplayEntity {
     }
 
     public void setText(Component component){
-        metadata.add(new EntityData(23, EntityDataTypes.ADV_COMPONENT, component));
+        metadata.put(23, new EntityData(23, EntityDataTypes.ADV_COMPONENT, component));
     }
 
     public void setLineWidth(int width){
-        metadata.add(new EntityData(24, EntityDataTypes.INT, width));
+        metadata.put(24, new EntityData(24, EntityDataTypes.INT, width));
     }
 
     public void setBackgroundColor(Color color){
-        metadata.add(new EntityData(25, EntityDataTypes.INT, color.asARGB()));
+        metadata.put(25, new EntityData(25, EntityDataTypes.INT, color.asARGB()));
     }
 
     public void setOpacity(byte value){
-        metadata.add(new EntityData(26, EntityDataTypes.BYTE, value));
+        metadata.put(26, new EntityData(26, EntityDataTypes.BYTE, value));
     }
 }

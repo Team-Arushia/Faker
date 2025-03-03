@@ -17,20 +17,17 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class FakeEntity {
     protected Location location;
     protected World world;
     protected final EntityType type;
-    protected final List<EntityData> metadata = new CopyOnWriteArrayList<>();
+    protected final Map<Integer, EntityData> metadata = new ConcurrentHashMap<>();
     protected final int entityId = SpigotReflectionUtil.generateEntityId();
     protected final List<UUID> blacklist = new ArrayList<>();
-
-    private UUID ridingEntityId = null;
 
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
@@ -59,28 +56,13 @@ public abstract class FakeEntity {
         if(blacklist.stream().map(UUID::toString).toString().contains(player.getUniqueId().toString()))
             return;
 
-        WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
+        WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata.values().stream().toList());
 
         PacketEvents.getAPI().getPlayerManager().sendPacket(player, metadataPacket);
 
         WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
 
         PacketEvents.getAPI().getPlayerManager().sendPacket(player, teleportPacket);
-
-        if(ridingEntityId != null) {
-            Entity ridingEntity = Bukkit.getEntity(ridingEntityId);
-
-            if(ridingEntity != null) {
-                List<Integer> passengerIds = new ArrayList<>(ridingEntity.getPassengers().stream().map(Entity::getEntityId).toList());
-                passengerIds.add(entityId);
-
-                WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(ridingEntity.getEntityId(), passengerIds.stream().mapToInt(Integer::intValue).toArray());
-
-                PacketEvents.getAPI().getPlayerManager().sendPacket(player, passengersPacket);
-            }
-        } else {
-            // TODO
-        }
     }
 
     public void updateAll(){
@@ -113,23 +95,16 @@ public abstract class FakeEntity {
     }
 
     @ApiStatus.Experimental
-    public @Nullable Entity getRidingEntity() {
-        return ridingEntityId == null ? null : Bukkit.getEntity(ridingEntityId);
-    }
-
-    @ApiStatus.Experimental
-    public void setRidingEntity(@Nullable Entity entity) {
-        this.ridingEntityId = entity == null ? null : entity.getUniqueId();
-
-        updateAll();
+    public void ride(@Nullable Entity entity) {
+        FakeEntityServer.rideFakeEntityOn(this, entity);
     }
 
     public org.bukkit.entity.EntityType getType() {
         return SpigotConversionUtil.toBukkitEntityType(type);
     }
 
-    public List<EntityData> getMetadata() {
-        return metadata;
+    public Collection<EntityData> getMetadata() {
+        return metadata.values();
     }
 
     public int getEntityId() {
