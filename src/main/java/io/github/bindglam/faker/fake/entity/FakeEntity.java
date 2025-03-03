@@ -7,6 +7,7 @@ import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
 import com.github.retrooper.packetevents.protocol.npc.NPC;
 import com.github.retrooper.packetevents.protocol.world.Location;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
+import io.github.bindglam.faker.Faker;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
 import org.bukkit.Bukkit;
@@ -19,12 +20,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class FakeEntity {
     protected Location location;
     protected World world;
     protected final EntityType type;
-    protected final List<EntityData> metadata = new ArrayList<>();
+    protected final List<EntityData> metadata = new CopyOnWriteArrayList<>();
     protected final int entityId = SpigotReflectionUtil.generateEntityId();
     protected final List<UUID> blacklist = new ArrayList<>();
 
@@ -82,7 +84,7 @@ public abstract class FakeEntity {
     }
 
     public void updateAll(){
-        Bukkit.getOnlinePlayers().forEach(this::update);
+        Bukkit.getScheduler().runTask(Faker.getInstance(), () -> Bukkit.getOnlinePlayers().forEach(this::update));
     }
 
     public void remove(Player player){
@@ -96,7 +98,7 @@ public abstract class FakeEntity {
     }
 
     public void removeAll(){
-        Bukkit.getOnlinePlayers().forEach(this::remove);
+        Bukkit.getScheduler().runTask(Faker.getInstance(), () -> Bukkit.getOnlinePlayers().forEach(this::remove));
     }
 
     public org.bukkit.Location getLocation() {
@@ -118,6 +120,8 @@ public abstract class FakeEntity {
     @ApiStatus.Experimental
     public void setRidingEntity(@Nullable Entity entity) {
         this.ridingEntityId = entity == null ? null : entity.getUniqueId();
+
+        updateAll();
     }
 
     public org.bukkit.entity.EntityType getType() {
