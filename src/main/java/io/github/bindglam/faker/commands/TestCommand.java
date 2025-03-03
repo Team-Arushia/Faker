@@ -48,6 +48,8 @@ public class TestCommand implements CommandExecutor {
                     new AxisAngle4f()
             ));
 
+            entity.setRidingEntity(player);
+
             server.add(entity);
         }
         return false;

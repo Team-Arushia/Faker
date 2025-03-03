@@ -6,15 +6,15 @@ import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
 import com.github.retrooper.packetevents.protocol.npc.NPC;
 import com.github.retrooper.packetevents.protocol.world.Location;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityTeleport;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
+import com.github.retrooper.packetevents.wrapper.play.server.*;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +27,8 @@ public abstract class FakeEntity {
     protected final List<EntityData> metadata = new ArrayList<>();
     protected final int entityId = SpigotReflectionUtil.generateEntityId();
     protected final List<UUID> blacklist = new ArrayList<>();
+
+    private UUID ridingEntityId = null;
 
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
@@ -56,10 +58,27 @@ public abstract class FakeEntity {
             return;
 
         WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
-        WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
 
         PacketEvents.getAPI().getPlayerManager().sendPacket(player, metadataPacket);
+
+        WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
+
         PacketEvents.getAPI().getPlayerManager().sendPacket(player, teleportPacket);
+
+        if(ridingEntityId != null) {
+            Entity ridingEntity = Bukkit.getEntity(ridingEntityId);
+
+            if(ridingEntity != null) {
+                List<Integer> passengerIds = new ArrayList<>(ridingEntity.getPassengers().stream().map(Entity::getEntityId).toList());
+                passengerIds.add(entityId);
+
+                WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(ridingEntity.getEntityId(), passengerIds.stream().mapToInt(Integer::intValue).toArray());
+
+                PacketEvents.getAPI().getPlayerManager().sendPacket(player, passengersPacket);
+            }
+        } else {
+            // TODO
+        }
     }
 
     public void updateAll(){
@@ -89,6 +108,16 @@ public abstract class FakeEntity {
         this.world = location.getWorld();
 
         updateAll();
+    }
+
+    @ApiStatus.Experimental
+    public @Nullable Entity getRidingEntity() {
+        return ridingEntityId == null ? null : Bukkit.getEntity(ridingEntityId);
+    }
+
+    @ApiStatus.Experimental
+    public void setRidingEntity(@Nullable Entity entity) {
+        this.ridingEntityId = entity == null ? null : entity.getUniqueId();
     }
 
     public org.bukkit.entity.EntityType getType() {
