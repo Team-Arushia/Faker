@@ -5,6 +5,7 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
 import com.github.retrooper.packetevents.protocol.npc.NPC;
+import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.world.Location;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import io.github.bindglam.faker.Faker;
@@ -35,52 +36,64 @@ public abstract class FakeEntity {
         this.world = bukkitLoc.getWorld();
     }
 
-    public void spawn(Player player){
-        if(!player.getWorld().getName().equals(world.getName())) return;
-        if(blacklist.stream().map(UUID::toString).toString().contains(player.getUniqueId().toString()))
+    private void spawn(User user) {
+        if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
         WrapperPlayServerSpawnEntity spawnPacket = new WrapperPlayServerSpawnEntity(entityId, UUID.randomUUID(), type, location, 0f, 0, null);
+        user.sendPacket(spawnPacket);
 
-        PacketEvents.getAPI().getPlayerManager().sendPacket(player, spawnPacket);
+        update(user);
+    }
 
-        update(player);
+    public void spawn(Player player){
+        if(!player.getWorld().getName().equals(world.getName())) return;
+
+        spawn(PacketEvents.getAPI().getPlayerManager().getUser(player));
     }
 
     public void spawnAll(){
-        Bukkit.getOnlinePlayers().forEach(this::spawn);
+        PacketEvents.getAPI().getProtocolManager().getUsers().forEach(this::spawn);
+    }
+
+    private void update(User user){
+        if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
+            return;
+
+        WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata.values().stream().toList());
+        user.sendPacket(metadataPacket);
+
+        WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
+        user.sendPacket(teleportPacket);
     }
 
     public void update(Player player){
         if(!player.getWorld().getName().equals(world.getName())) return;
-        if(blacklist.stream().map(UUID::toString).toString().contains(player.getUniqueId().toString()))
-            return;
 
-        WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata.values().stream().toList());
-
-        PacketEvents.getAPI().getPlayerManager().sendPacket(player, metadataPacket);
-
-        WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
-
-        PacketEvents.getAPI().getPlayerManager().sendPacket(player, teleportPacket);
+        update(PacketEvents.getAPI().getPlayerManager().getUser(player));
     }
 
     public void updateAll(){
-        Bukkit.getScheduler().runTask(Faker.getInstance(), () -> Bukkit.getOnlinePlayers().forEach(this::update));
+        PacketEvents.getAPI().getProtocolManager().getUsers().forEach(this::update);
     }
 
-    public void remove(Player player){
-        if(!player.getWorld().getName().equals(world.getName())) return;
-        if(blacklist.stream().map(UUID::toString).toString().contains(player.getUniqueId().toString()))
+    private void remove(User user){
+        if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
         WrapperPlayServerDestroyEntities removePacket = new WrapperPlayServerDestroyEntities(entityId);
 
-        PacketEvents.getAPI().getPlayerManager().sendPacket(player, removePacket);
+        user.sendPacket(removePacket);
+    }
+
+    public void remove(Player player){
+        if(!player.getWorld().getName().equals(world.getName())) return;
+
+        remove(PacketEvents.getAPI().getPlayerManager().getUser(player));
     }
 
     public void removeAll(){
-        Bukkit.getScheduler().runTask(Faker.getInstance(), () -> Bukkit.getOnlinePlayers().forEach(this::remove));
+        PacketEvents.getAPI().getProtocolManager().getUsers().forEach(this::remove);
     }
 
     public org.bukkit.Location getLocation() {

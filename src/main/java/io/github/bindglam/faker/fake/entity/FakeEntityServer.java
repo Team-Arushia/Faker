@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public final class FakeEntityServer implements FakeServer<FakeEntity> {
     private final Map<Integer, FakeEntity> entities = new HashMap<>();
@@ -17,22 +18,21 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
     private static final Map<UUID, List<Integer>> PASSENGERS = new HashMap<>();
 
     static {
-        Bukkit.getScheduler().runTaskTimer(Faker.getInstance(), () -> {
-            PASSENGERS.forEach((uuid, entityIds) -> {
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(Faker.getInstance(), () -> {
+            for(int i = PASSENGERS.size() - 1; i >= 0; i--){
+                UUID uuid = PASSENGERS.keySet().stream().toList().get(i);
+                List<Integer> entityIds = PASSENGERS.get(uuid);
+
                 Entity entity = Bukkit.getEntity(uuid);
-                if(entity == null) {
-                    PASSENGERS.remove(uuid);
-                    return;
-                }
+                if(entity == null) continue;
 
                 List<Integer> passengers = new ArrayList<>(entityIds);
                 passengers.addAll(entity.getPassengers().stream().map(Entity::getEntityId).toList());
 
                 WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(entity.getEntityId(), passengers.stream().mapToInt(Integer::intValue).toArray());
-
-                Bukkit.getOnlinePlayers().forEach((player) -> PacketEvents.getAPI().getPlayerManager().sendPacket(player, passengersPacket));
-            });
-        }, 1L, 1L);
+                PacketEvents.getAPI().getProtocolManager().getUsers().forEach((user) -> user.writePacket(passengersPacket));
+            }
+        }, 0L, 1L);
     }
 
     public FakeEntityServer(){

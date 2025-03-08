@@ -6,6 +6,7 @@ import io.github.bindglam.faker.fake.entity.FakeEntityServer;
 import io.github.bindglam.faker.fake.entity.display.FakeItemDisplayEntity;
 import io.github.bindglam.faker.fake.entity.display.FakeTextDisplayEntity;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -33,7 +34,7 @@ public class TestCommand implements CommandExecutor {
             entity.setBillboard(Display.Billboard.HORIZONTAL);
             entity.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
 
-            server.add(entity);
+            Bukkit.getAsyncScheduler().runNow(Faker.getInstance(), (task) -> server.add(entity));
         } else if(args[0].equalsIgnoreCase("itemdisplay")){
             FakeItemDisplayEntity entity = new FakeItemDisplayEntity(player.getLocation());
             entity.setItemStack(new ItemStack(Material.DIAMOND_SWORD));
