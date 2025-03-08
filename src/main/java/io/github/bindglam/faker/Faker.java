@@ -25,7 +25,6 @@ public class Faker extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        instance = null;
     }
 
     public FakeServerManager getServerManager() {
