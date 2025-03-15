@@ -22,7 +22,7 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
                 List<Integer> passengers = new ArrayList<>();
 
                 Entity entity = SpigotConversionUtil.getEntityById(null, id);
-                if(entity != null) {
+                if(entity != null && entity.isValid()) {
                     passengers.addAll(entity.getPassengers().stream().map(Entity::getEntityId).toList());
                 } else if(!isFakeEntity(id)) {
                     return;
