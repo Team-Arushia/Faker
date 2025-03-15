@@ -25,10 +25,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public abstract class FakeEntity {
     protected Location location;
     protected World world;
+    protected int entityId = SpigotReflectionUtil.generateEntityId();
     protected final EntityType type;
     protected final Map<Integer, EntityData> metadata = new ConcurrentHashMap<>();
-    protected final int entityId = SpigotReflectionUtil.generateEntityId();
     protected final List<UUID> blacklist = new ArrayList<>();
+
+    private Integer ridingEntityId = null;
 
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
@@ -36,7 +38,7 @@ public abstract class FakeEntity {
         this.world = bukkitLoc.getWorld();
     }
 
-    private void spawn(User user) {
+    protected void spawn(User user) {
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
@@ -56,7 +58,7 @@ public abstract class FakeEntity {
         PacketEvents.getAPI().getProtocolManager().getUsers().forEach(this::spawn);
     }
 
-    private void update(User user){
+    protected void update(User user){
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
@@ -77,7 +79,7 @@ public abstract class FakeEntity {
         PacketEvents.getAPI().getProtocolManager().getUsers().forEach(this::update);
     }
 
-    private void remove(User user){
+    protected void remove(User user){
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
@@ -109,7 +111,20 @@ public abstract class FakeEntity {
 
     @ApiStatus.Experimental
     public void ride(@Nullable Entity entity) {
-        FakeEntityServer.rideFakeEntityOn(this, entity);
+        ridingEntityId = entity.getEntityId();
+
+        FakeEntityServer.addPassengersPacketQueue(entity.getEntityId());
+    }
+
+    @ApiStatus.Experimental
+    public void ride(@Nullable FakeEntity entity) {
+        ridingEntityId = entity.entityId;
+
+        FakeEntityServer.addPassengersPacketQueue(entity.entityId);
+    }
+
+    public Integer getRidingEntityId() {
+        return ridingEntityId;
     }
 
     public org.bukkit.entity.EntityType getType() {

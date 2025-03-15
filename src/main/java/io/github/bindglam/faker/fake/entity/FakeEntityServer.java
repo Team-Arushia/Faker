@@ -4,34 +4,36 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetPassengers;
 import io.github.bindglam.faker.Faker;
 import io.github.bindglam.faker.fake.FakeServer;
+import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public final class FakeEntityServer implements FakeServer<FakeEntity> {
     private final Map<Integer, FakeEntity> entities = new HashMap<>();
 
-    private static final Map<UUID, List<Integer>> PASSENGERS = new HashMap<>();
+    private static final Set<Integer> ENTITIES_REQUIRING_PASSENGERS_PACKET = new HashSet<>();
 
     static {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Faker.getInstance(), () -> {
-            for(int i = PASSENGERS.size() - 1; i >= 0; i--){
-                UUID uuid = PASSENGERS.keySet().stream().toList().get(i);
-                List<Integer> entityIds = PASSENGERS.get(uuid);
+            ENTITIES_REQUIRING_PASSENGERS_PACKET.forEach((id) -> {
+                List<Integer> passengers = new ArrayList<>();
 
-                Entity entity = Bukkit.getEntity(uuid);
-                if(entity == null) continue;
+                Entity entity = SpigotConversionUtil.getEntityById(null, id);
+                if(entity != null) {
+                    passengers.addAll(entity.getPassengers().stream().map(Entity::getEntityId).toList());
+                } else if(!isFakeEntity(id)) {
+                    return;
+                }
+                passengers.addAll(getFakeEntities().stream().filter((fakeEntity) -> Objects.equals(fakeEntity.getRidingEntityId(), id)).map(FakeEntity::getEntityId).toList());
 
-                List<Integer> passengers = new ArrayList<>(entityIds);
-                passengers.addAll(entity.getPassengers().stream().map(Entity::getEntityId).toList());
+                WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(id, passengers.stream().mapToInt(Integer::intValue).toArray());
+                PacketEvents.getAPI().getProtocolManager().getUsers().forEach((user) -> user.sendPacket(passengersPacket));
+            });
 
-                WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(entity.getEntityId(), passengers.stream().mapToInt(Integer::intValue).toArray());
-                PacketEvents.getAPI().getProtocolManager().getUsers().forEach((user) -> user.writePacket(passengersPacket));
-            }
+            ENTITIES_REQUIRING_PASSENGERS_PACKET.clear();
         }, 0L, 1L);
     }
 
@@ -63,16 +65,45 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
         entities.clear();
     }
 
-    public static void rideFakeEntityOn(FakeEntity fakeEntity, @Nullable Entity entity){
-        if(entity == null){
-            PASSENGERS.forEach((uuid, ids) -> ids.forEach((id) -> {
-                if(fakeEntity.entityId == id)
-                    ids.remove(id);
-            }));
-        } else {
-            if (!PASSENGERS.containsKey(entity.getUniqueId()))
-                PASSENGERS.put(entity.getUniqueId(), new ArrayList<>());
-            PASSENGERS.get(entity.getUniqueId()).add(fakeEntity.entityId);
+    public static boolean isFakeEntity(int entityId) {
+        for (Map<String, FakeServer<?>> map : Faker.getInstance().getServerManager().getServers().values()) {
+            for (FakeServer<?> server : map.values()) {
+                if(server instanceof FakeEntityServer entityServer) {
+                    if(entityServer.entities.containsKey(entityId)) {
+                        return true;
+                    }
+                }
+            }
         }
+        return false;
+    }
+
+    public static @Nullable FakeEntity getFakeEntity(int entityId) {
+        for (Map<String, FakeServer<?>> map : Faker.getInstance().getServerManager().getServers().values()) {
+            for (FakeServer<?> server : map.values()) {
+                if(server instanceof FakeEntityServer entityServer) {
+                    if(entityServer.entities.containsKey(entityId)) {
+                        return entityServer.entities.get(entityId);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static Collection<FakeEntity> getFakeEntities() {
+        List<FakeEntity> fakeEntities = new ArrayList<>();
+
+        Faker.getInstance().getServerManager().getServers().values().forEach((map) -> map.values().forEach((server) -> {
+            if(!(server instanceof FakeEntityServer entityServer)) return;
+
+            fakeEntities.addAll(entityServer.entities.values());
+        }));
+
+        return fakeEntities;
+    }
+
+    public static void addPassengersPacketQueue(Integer entityId){
+        ENTITIES_REQUIRING_PASSENGERS_PACKET.add(entityId);
     }
 }
