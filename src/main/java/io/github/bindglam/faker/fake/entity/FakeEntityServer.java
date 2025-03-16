@@ -14,26 +14,33 @@ import java.util.*;
 public final class FakeEntityServer implements FakeServer<FakeEntity> {
     private final Map<Integer, FakeEntity> entities = new HashMap<>();
 
-    private static final Set<Integer> ENTITIES_REQUIRING_PASSENGERS_PACKET = new HashSet<>();
+    private static final Map<Integer, List<Integer>> PASSENGERS = new HashMap<>();
 
     static {
         Bukkit.getScheduler().scheduleSyncRepeatingTask(Faker.getInstance(), () -> {
-            ENTITIES_REQUIRING_PASSENGERS_PACKET.forEach((id) -> {
-                List<Integer> passengers = new ArrayList<>();
+            List<Integer> keyList = PASSENGERS.keySet().stream().toList();
+            for(int i = PASSENGERS.size() - 1; i >= 0; i--){
+                Integer entityId = keyList.get(i);
+                List<Integer> entityIds = PASSENGERS.get(entityId);
 
-                Entity entity = SpigotConversionUtil.getEntityById(null, id);
+                if(entityIds.isEmpty()){
+                    PASSENGERS.remove(entityId);
+                    continue;
+                }
+
+                List<Integer> passengers = new ArrayList<>(entityIds);
+
+                Entity entity = SpigotConversionUtil.getEntityById(null, entityId);
                 if(entity != null && entity.isValid()) {
                     passengers.addAll(entity.getPassengers().stream().map(Entity::getEntityId).toList());
-                } else if(!isFakeEntity(id)) {
-                    return;
+                } else if (!isFakeEntity(entityId)) {
+                    PASSENGERS.remove(entityId);
+                    continue;
                 }
-                passengers.addAll(getFakeEntities().stream().filter((fakeEntity) -> Objects.equals(fakeEntity.getRidingEntityId(), id)).map(FakeEntity::getEntityId).toList());
 
-                WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(id, passengers.stream().mapToInt(Integer::intValue).toArray());
-                PacketEvents.getAPI().getProtocolManager().getUsers().forEach((user) -> user.sendPacket(passengersPacket));
-            });
-
-            ENTITIES_REQUIRING_PASSENGERS_PACKET.clear();
+                WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(entityId, passengers.stream().mapToInt(Integer::intValue).toArray());
+                PacketEvents.getAPI().getProtocolManager().getUsers().forEach((user) -> user.writePacket(passengersPacket));
+            }
         }, 0L, 1L);
     }
 
@@ -57,6 +64,8 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
         entity.removeAll();
 
         entities.remove(entity.entityId);
+
+        PASSENGERS.values().forEach((entityIds) -> entityIds.removeIf((id) -> entity.entityId == id));
     }
 
     @Override
@@ -103,7 +112,29 @@ public final class FakeEntityServer implements FakeServer<FakeEntity> {
         return fakeEntities;
     }
 
-    public static void addPassengersPacketQueue(Integer entityId){
-        ENTITIES_REQUIRING_PASSENGERS_PACKET.add(entityId);
+    public static void rideFakeEntityOn(FakeEntity fakeEntity, @Nullable Entity entity){
+        if(entity == null){
+            PASSENGERS.forEach((uuid, ids) -> ids.forEach((id) -> {
+                if(fakeEntity.entityId == id)
+                    ids.remove(id);
+            }));
+        } else {
+            if (!PASSENGERS.containsKey(entity.getEntityId()))
+                PASSENGERS.put(entity.getEntityId(), new ArrayList<>());
+            PASSENGERS.get(entity.getEntityId()).add(fakeEntity.entityId);
+        }
+    }
+
+    public static void rideFakeEntityOn(FakeEntity fakeEntity, @Nullable FakeEntity entity){
+        if(entity == null){
+            PASSENGERS.forEach((uuid, ids) -> ids.forEach((id) -> {
+                if(fakeEntity.entityId == id)
+                    ids.remove(id);
+            }));
+        } else {
+            if (!PASSENGERS.containsKey(entity.getEntityId()))
+                PASSENGERS.put(entity.getEntityId(), new ArrayList<>());
+            PASSENGERS.get(entity.getEntityId()).add(fakeEntity.entityId);
+        }
     }
 }

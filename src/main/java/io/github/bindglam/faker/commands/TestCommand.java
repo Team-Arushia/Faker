@@ -64,7 +64,17 @@ public class TestCommand implements CommandExecutor {
             server.add(textDisplay);
 
             itemDisplay.ride(player);
-            textDisplay.ride(itemDisplay);
+            textDisplay.ride(player);
+
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(Faker.getInstance(), () -> {
+                itemDisplay.setTransformation(new Transformation(
+                        new Vector3f((float) (player.getLocation().getDirection().getX()*2f), (float) (player.getLocation().getDirection().getY()*2f), (float) (player.getLocation().getDirection().getZ()*2f)),
+                        new AxisAngle4f(0f, 0f, 0f, 0f),
+                        new Vector3f(1f, 1f, 1f),
+                        new AxisAngle4f(0f, 0f, 0f, 0f)
+                ));
+                itemDisplay.updateAll();
+            }, 0L, 1L);
         }
         return false;
     }

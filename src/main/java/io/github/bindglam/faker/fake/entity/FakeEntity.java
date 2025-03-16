@@ -30,8 +30,6 @@ public abstract class FakeEntity {
     protected final Map<Integer, EntityData> metadata = new ConcurrentHashMap<>();
     protected final List<UUID> blacklist = new ArrayList<>();
 
-    private Integer ridingEntityId = null;
-
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
         this.location = SpigotConversionUtil.fromBukkitLocation(bukkitLoc);
@@ -111,20 +109,12 @@ public abstract class FakeEntity {
 
     @ApiStatus.Experimental
     public void ride(@Nullable Entity entity) {
-        ridingEntityId = entity.getEntityId();
-
-        FakeEntityServer.addPassengersPacketQueue(entity.getEntityId());
+        FakeEntityServer.rideFakeEntityOn(this, entity);
     }
 
     @ApiStatus.Experimental
     public void ride(@Nullable FakeEntity entity) {
-        ridingEntityId = entity.entityId;
-
-        FakeEntityServer.addPassengersPacketQueue(entity.entityId);
-    }
-
-    public Integer getRidingEntityId() {
-        return ridingEntityId;
+        FakeEntityServer.rideFakeEntityOn(this, entity);
     }
 
     public org.bukkit.entity.EntityType getType() {
