@@ -15,10 +15,10 @@ public class FakeItemDisplayEntity extends FakeDisplayEntity {
     }
 
     public void setItemStack(ItemStack itemStack){
-        metadata.put(23, new EntityData(23, EntityDataTypes.ITEMSTACK, SpigotConversionUtil.fromBukkitItemStack(itemStack)));
+        setMetadata(new EntityData(23, EntityDataTypes.ITEMSTACK, SpigotConversionUtil.fromBukkitItemStack(itemStack)));
     }
 
     public void setDisplayTransform(ItemDisplay.ItemDisplayTransform transform){
-        metadata.put(24, new EntityData(24, EntityDataTypes.BYTE, (byte) transform.ordinal()));
+        setMetadata(new EntityData(24, EntityDataTypes.BYTE, (byte) transform.ordinal()));
     }
 }

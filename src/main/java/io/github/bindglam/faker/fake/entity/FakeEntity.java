@@ -27,7 +27,7 @@ public abstract class FakeEntity {
     protected World world;
     protected int entityId = SpigotReflectionUtil.generateEntityId();
     protected final EntityType type;
-    protected final Map<Integer, EntityData> metadata = new ConcurrentHashMap<>();
+    protected final List<EntityData> metadata = new ArrayList<>();
     protected final List<UUID> blacklist = new ArrayList<>();
 
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
@@ -37,6 +37,8 @@ public abstract class FakeEntity {
     }
 
     protected void spawn(User user) {
+        if(user.getUUID() == null)
+            return;
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
@@ -57,10 +59,12 @@ public abstract class FakeEntity {
     }
 
     protected void update(User user){
+        if(user.getUUID() == null)
+            return;
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
-        WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata.values().stream().toList());
+        WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
         user.sendPacket(metadataPacket);
 
         WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
@@ -78,6 +82,8 @@ public abstract class FakeEntity {
     }
 
     protected void remove(User user){
+        if(user.getUUID() == null)
+            return;
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
@@ -122,7 +128,18 @@ public abstract class FakeEntity {
     }
 
     public Collection<EntityData> getMetadata() {
-        return metadata.values();
+        return metadata;
+    }
+
+    public void setMetadata(EntityData data) {
+        for (EntityData value : metadata) {
+            if (value.getIndex() == data.getIndex()) {
+                value.setType(data.getType());
+                value.setValue(data.getValue());
+                return;
+            }
+        }
+        metadata.add(data);
     }
 
     public int getEntityId() {
