@@ -3,9 +3,12 @@ package io.github.bindglam.faker;
 import io.github.bindglam.faker.commands.TestCommand;
 import io.github.bindglam.faker.fake.FakeServerManager;
 import io.github.bindglam.faker.fake.entity.FakeEntityServer;
+import io.github.bindglam.faker.listeners.EntityListener;
 import io.github.bindglam.faker.listeners.PlayerListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class Faker extends JavaPlugin {
     private static Faker instance;
@@ -17,8 +20,9 @@ public class Faker extends JavaPlugin {
         instance = this;
 
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+        getServer().getPluginManager().registerEvents(new EntityListener(), this);
 
-        getCommand("testfake").setExecutor(new TestCommand());
+        Objects.requireNonNull(getCommand("testfake")).setExecutor(new TestCommand());
 
         serverManager.register(this, "test", new FakeEntityServer());
     }

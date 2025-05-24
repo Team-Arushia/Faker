@@ -9,6 +9,7 @@ import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.world.Location;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import io.github.bindglam.faker.Faker;
+import io.github.bindglam.faker.fake.FakeServer;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
 import org.bukkit.Bukkit;
@@ -16,6 +17,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -29,6 +31,9 @@ public abstract class FakeEntity {
     protected final EntityType type;
     protected final List<EntityData> metadata = new ArrayList<>();
     protected final List<UUID> blacklist = new ArrayList<>();
+    protected final List<Integer> passengers = new ArrayList<>();
+
+    private FakeServer<FakeEntity> server;
 
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
@@ -69,6 +74,11 @@ public abstract class FakeEntity {
 
         WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
         user.sendPacket(teleportPacket);
+
+        if(!passengers.isEmpty()) {
+            WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(entityId, passengers.stream().mapToInt(Integer::intValue).toArray());
+            user.sendPacket(passengersPacket);
+        }
     }
 
     public void update(Player player){
@@ -114,13 +124,18 @@ public abstract class FakeEntity {
     }
 
     @ApiStatus.Experimental
-    public void ride(@Nullable Entity entity) {
-        FakeEntityServer.rideFakeEntityOn(this, entity);
+    public void addPassenger(@NotNull FakeEntity entity) {
+        passengers.add(entity.getEntityId());
     }
 
     @ApiStatus.Experimental
-    public void ride(@Nullable FakeEntity entity) {
-        FakeEntityServer.rideFakeEntityOn(this, entity);
+    public void addPassenger(@NotNull Entity entity) {
+        passengers.add(entity.getEntityId());
+    }
+
+    @ApiStatus.Experimental
+    public void clearPassengers() {
+        passengers.clear();
     }
 
     public org.bukkit.entity.EntityType getType() {
@@ -144,5 +159,13 @@ public abstract class FakeEntity {
 
     public int getEntityId() {
         return entityId;
+    }
+
+    public @Nullable FakeServer<FakeEntity> getServer() {
+        return server;
+    }
+
+    public void setServer(FakeServer<FakeEntity> server) {
+        this.server = server;
     }
 }

@@ -2,6 +2,7 @@ package io.github.bindglam.faker.commands;
 
 import io.github.bindglam.faker.Faker;
 import io.github.bindglam.faker.fake.entity.FakeEntityServer;
+import io.github.bindglam.faker.fake.entity.FakeRealEntity;
 import io.github.bindglam.faker.fake.entity.display.FakeItemDisplayEntity;
 import io.github.bindglam.faker.fake.entity.display.FakeTextDisplayEntity;
 import net.kyori.adventure.text.Component;
@@ -63,10 +64,15 @@ public class TestCommand implements CommandExecutor {
             server.add(itemDisplay);
             server.add(textDisplay);
 
-            itemDisplay.ride(player);
-            textDisplay.ride(player);
+            Cow cow = player.getWorld().spawn(player.getLocation(), Cow.class);
+            cow.setPersistent(true);
 
-            Bukkit.getScheduler().scheduleSyncRepeatingTask(Faker.getInstance(), () -> {
+            FakeRealEntity fakePlayer = server.toFakeRealEntity(cow);
+            fakePlayer.addPassenger(itemDisplay);
+            fakePlayer.addPassenger(textDisplay);
+            fakePlayer.updateAll();
+
+            /*Bukkit.getScheduler().scheduleSyncRepeatingTask(Faker.getInstance(), () -> {
                 itemDisplay.setTransformation(new Transformation(
                         new Vector3f((float) (player.getLocation().getDirection().getX()*2f), (float) (player.getLocation().getDirection().getY()*2f), (float) (player.getLocation().getDirection().getZ()*2f)),
                         new AxisAngle4f(0f, 0f, 0f, 0f),
@@ -74,7 +80,7 @@ public class TestCommand implements CommandExecutor {
                         new AxisAngle4f(0f, 0f, 0f, 0f)
                 ));
                 itemDisplay.updateAll();
-            }, 0L, 1L);
+            }, 0L, 1L);*/
         }
         return false;
     }
