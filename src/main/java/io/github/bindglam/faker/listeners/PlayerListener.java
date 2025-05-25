@@ -1,6 +1,5 @@
 package io.github.bindglam.faker.listeners;
 
-import io.github.bindglam.faker.Faker;
 import io.github.bindglam.faker.fake.FakeServer;
 import io.github.bindglam.faker.fake.entity.FakeEntity;
 import io.github.bindglam.faker.fake.entity.FakeEntityServer;
@@ -16,11 +15,7 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
 
-        Faker.getInstance().getServerManager().getServers().values().forEach((map) -> map.values().forEach((server) -> {
-            if(server instanceof FakeEntityServer entityServer) {
-                entityServer.getAll().forEach((entity) -> entity.spawn(player));
-            }
-        }));
+        FakeEntityServer.getFakeEntities().forEach(entity -> entity.spawn(player));
     }
 
     @EventHandler
