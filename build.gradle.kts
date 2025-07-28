@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("com.gradleup.shadow") version "9.0.0-rc2"
 }
 
 group = "io.github.bindglam"
@@ -15,7 +15,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
 
-    compileOnly("com.github.retrooper:packetevents-spigot:2.6.0")
+    implementation("com.github.retrooper:packetevents-spigot:2.9.4")
 }
 
 java {
@@ -23,7 +23,14 @@ java {
 }
 
 tasks {
-    runServer {
-        minecraftVersion("1.21.4")
+    build {
+        dependsOn(shadowJar)
+    }
+
+    shadowJar {
+        archiveFileName = "Faker-$version.jar"
+
+        relocate("com.github.retrooper.packetevents", "com.bindglam.faker.packetevents.api")
+        relocate("io.github.retrooper.packetevents", "com.bindglam.faker.packetevents.impl")
     }
 }

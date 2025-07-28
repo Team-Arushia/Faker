@@ -1,4 +1,4 @@
-package io.github.bindglam.faker.fake;
+package com.bindglam.faker;
 
 import java.util.Collection;
 

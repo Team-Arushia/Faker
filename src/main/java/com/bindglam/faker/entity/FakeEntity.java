@@ -1,28 +1,22 @@
-package io.github.bindglam.faker.fake.entity;
+package com.bindglam.faker.entity;
 
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
-import com.github.retrooper.packetevents.protocol.npc.NPC;
 import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.world.Location;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
-import io.github.bindglam.faker.Faker;
-import io.github.bindglam.faker.fake.FakeServer;
+import com.bindglam.faker.FakeServer;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class FakeEntity {
     protected Location location;
@@ -71,6 +65,7 @@ public abstract class FakeEntity {
 
         WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
         user.sendPacket(metadataPacket);
+        metadata.clear();
 
         WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
         user.sendPacket(teleportPacket);
@@ -123,17 +118,14 @@ public abstract class FakeEntity {
         updateAll();
     }
 
-    @ApiStatus.Experimental
     public void addPassenger(@NotNull FakeEntity entity) {
         passengers.add(entity.getEntityId());
     }
 
-    @ApiStatus.Experimental
     public void addPassenger(@NotNull Entity entity) {
         passengers.add(entity.getEntityId());
     }
 
-    @ApiStatus.Experimental
     public void clearPassengers() {
         passengers.clear();
     }

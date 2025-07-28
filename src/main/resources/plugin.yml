@@ -1,9 +1,0 @@
-name: Faker
-main: io.github.bindglam.faker.Faker
-version: 1.0
-api-version: 1.21
-depend:
-  - packetevents
-commands:
-  testfake:
-    permission: op

@@ -1,4 +1,4 @@
-package io.github.bindglam.faker.fake.entity;
+package com.bindglam.faker.entity;
 
 import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetPassengers;
@@ -38,7 +38,7 @@ public class FakeRealEntity extends FakeEntity {
 
     @Override
     public void addPassenger(@NotNull FakeEntity entity) {
-        passengers.add(entity.getEntityId());
+        super.addPassenger(entity);
     }
 
     @Override
