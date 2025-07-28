@@ -7,14 +7,12 @@ import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
 import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.world.Location;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
-import com.bindglam.faker.FakeServer;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -26,8 +24,6 @@ public abstract class FakeEntity {
     protected final List<EntityData<?>> metadata = new ArrayList<>();
     protected final List<UUID> blacklist = new ArrayList<>();
     protected final List<Integer> passengers = new ArrayList<>();
-
-    private FakeServer<FakeEntity> server;
 
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
@@ -144,13 +140,5 @@ public abstract class FakeEntity {
 
     public int getEntityId() {
         return entityId;
-    }
-
-    public @Nullable FakeServer<FakeEntity> getServer() {
-        return server;
-    }
-
-    public void setServer(FakeServer<FakeEntity> server) {
-        this.server = server;
     }
 }
