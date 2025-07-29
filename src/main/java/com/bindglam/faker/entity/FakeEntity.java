@@ -19,6 +19,7 @@ import java.util.*;
 public abstract class FakeEntity {
     protected Location location, lastLocation;
     protected World world;
+    protected UUID uuid = UUID.randomUUID();
     protected int entityId = SpigotReflectionUtil.generateEntityId();
     protected final EntityType type;
     protected final List<EntityData<?>> metadata = new ArrayList<>();
@@ -38,7 +39,7 @@ public abstract class FakeEntity {
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
-        WrapperPlayServerSpawnEntity spawnPacket = new WrapperPlayServerSpawnEntity(entityId, UUID.randomUUID(), type, location, 0f, 0, null);
+        WrapperPlayServerSpawnEntity spawnPacket = new WrapperPlayServerSpawnEntity(entityId, uuid, type, location, 0f, 0, null);
         user.sendPacket(spawnPacket);
 
         update(user);
@@ -77,7 +78,10 @@ public abstract class FakeEntity {
     }
 
     public void update(Player player){
-        if(!player.getWorld().getName().equals(world.getName())) return;
+        if(!player.getWorld().getName().equals(world.getName())) {
+            remove(player);
+            return;
+        }
 
         update(PacketEvents.getAPI().getPlayerManager().getUser(player));
     }
@@ -144,5 +148,9 @@ public abstract class FakeEntity {
 
     public int getEntityId() {
         return entityId;
+    }
+
+    public UUID getUniqueId() {
+        return uuid;
     }
 }
