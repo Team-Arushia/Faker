@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 
 public abstract class FakeEntity {
-    protected Location location;
+    protected Location location, lastLocation;
     protected World world;
     protected int entityId = SpigotReflectionUtil.generateEntityId();
     protected final EntityType type;
@@ -28,6 +28,7 @@ public abstract class FakeEntity {
     public FakeEntity(org.bukkit.entity.EntityType bukkitType, org.bukkit.Location bukkitLoc) {
         this.type = SpigotConversionUtil.fromBukkitEntityType(bukkitType);
         this.location = SpigotConversionUtil.fromBukkitLocation(bukkitLoc);
+        this.lastLocation = location;
         this.world = bukkitLoc.getWorld();
     }
 
@@ -63,8 +64,11 @@ public abstract class FakeEntity {
         user.sendPacket(metadataPacket);
         metadata.clear();
 
-        WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
-        user.sendPacket(teleportPacket);
+        if(location != lastLocation) {
+            WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
+            user.sendPacket(teleportPacket);
+            lastLocation = location;
+        }
 
         if(!passengers.isEmpty()) {
             WrapperPlayServerSetPassengers passengersPacket = new WrapperPlayServerSetPassengers(entityId, passengers.stream().mapToInt(Integer::intValue).toArray());
