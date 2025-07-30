@@ -48,7 +48,11 @@ public abstract class FakeEntity {
     public void spawn(Player player){
         if(!player.getWorld().getName().equals(world.getName())) return;
 
-        spawn(PacketEvents.getAPI().getPlayerManager().getUser(player));
+        User user = PacketEvents.getAPI().getPlayerManager().getUser(player);
+        if(user == null)
+            return;
+
+        spawn(user);
     }
 
     public void spawnAll(){
@@ -83,7 +87,11 @@ public abstract class FakeEntity {
             return;
         }
 
-        update(PacketEvents.getAPI().getPlayerManager().getUser(player));
+        User user = PacketEvents.getAPI().getPlayerManager().getUser(player);
+        if(user == null)
+            return;
+
+        update(user);
     }
 
     public void updateAll(){
@@ -104,7 +112,11 @@ public abstract class FakeEntity {
     public void remove(Player player){
         if(!player.getWorld().getName().equals(world.getName())) return;
 
-        remove(PacketEvents.getAPI().getPlayerManager().getUser(player));
+        User user = PacketEvents.getAPI().getPlayerManager().getUser(player);
+        if(user == null)
+            return;
+
+        remove(user);
     }
 
     public void removeAll(){
