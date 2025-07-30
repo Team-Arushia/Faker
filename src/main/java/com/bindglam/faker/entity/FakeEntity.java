@@ -66,7 +66,7 @@ public abstract class FakeEntity {
             return;
 
         if(!metadata.isEmpty()) {
-            WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
+            WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, new ArrayList<>(metadata));
             user.sendPacket(metadataPacket);
             metadata.clear();
         }
