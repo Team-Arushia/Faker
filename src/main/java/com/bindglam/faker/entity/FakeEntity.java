@@ -65,9 +65,11 @@ public abstract class FakeEntity {
         if(blacklist.stream().map(UUID::toString).toString().contains(user.getUUID().toString()))
             return;
 
-        WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
-        user.sendPacket(metadataPacket);
-        metadata.clear();
+        if(!metadata.isEmpty()) {
+            WrapperPlayServerEntityMetadata metadataPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
+            user.sendPacket(metadataPacket);
+            metadata.clear();
+        }
 
         if(location != lastLocation) {
             WrapperPlayServerEntityTeleport teleportPacket = new WrapperPlayServerEntityTeleport(entityId, location, false);
